@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Blog </title>
+  <style>
+    /* Style the drop zone */
+    .drop-zone {
+      border: 2px dashed #ccc;
+      padding: 20px;
+      text-align: center;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Blog </h1>
+
+  <form id="blog-form">
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" required>
+    <br><br>
+    <label for="content">Content:</label>
+    <div class="drop-zone" id="content-drop-zone">
+      Drag and drop images or videos here<br>or click to browse files.
+    </div>
+    <input type="hidden" id="content" name="content">
+    <br><br>
+    <input type="submit" value="Save Blog">
+  </form>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Initialize the drop zone
+      var dropZone = document.getElementById("content-drop-zone");
+
+      // Handle file drop
+      dropZone.addEventListener("drop", function(event) {
+        event.preventDefault();
+        var files = event.dataTransfer.files;
+        handleFiles(files);
+      });
+
+      // Handle file selection from the file input
+      dropZone.addEventListener("click", function() {
+        var fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.multiple = true;
+        fileInput.addEventListener("change", function() {
+          handleFiles(fileInput.files);
+        });
+        fileInput.click();
+      });
+
+      // Handle dropped files
+      function handleFiles(files) {
+        for (var i = 0; i < files.length; i++) {
+          var file = files[i];
+          if (file.type.startsWith("image/")) {
+            // Handle image file
+            var reader = new FileReader();
+            reader.onload = function(event) {
+              var img = document.createElement("img");
+              img.src = event.target.result;
+              img.width = 300;
+              dropZone.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+          } else if (file.type.startsWith("video/")) {
+            // Handle video file
+            var video = document.createElement("video");
+            video.src = URL.createObjectURL(file);
+            video.width = 300;
+            video.controls = true;
+            dropZone.appendChild(video);
+          }
+        }
+      }
+
+      // Handle form submission
+      var form = document.getElementById("blog-form");
+      form.addEventListener("submit", function(event) {
+        event.preventDefault();
+        var title = document.getElementById("title").value;
+        var content = dropZone.innerHTML;
+        // Perform AJAX request to save the blog data to the server
+        // Example: using fetch API
+        fetch("/save-blog", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ title: title, content: content })
+        })
+        .then(function(response) {
+          console.log("Blog saved successfully!");
+        })
+        .catch(function(error) {
+          console.error("Error saving blog:", error);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
